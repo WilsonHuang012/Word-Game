@@ -7,15 +7,41 @@
 
 using namespace std;
 
-void LoadFile(vector <string> &fiveWords, ifstream &fiveWordsFile)
+void LoadFiveWordFile(vector <string> &fiveWords, ifstream &fiveWordsFile)
 {
 
 	for (string line; std::getline(fiveWordsFile, line);)
 	{
 		if (!line.empty())
-			fiveWords.push_back(line);
+			if(line.size() == 5)
+				fiveWords.push_back(line);
 	}
 	fiveWordsFile.close();
+}
+
+bool ContainsWord(const vector <string> &list, const string& target)
+{
+	for (const string& word : list)
+	{
+		if (word == target)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+vector<string> FilterWords(vector<string>& fiveWords, vector<string>& commonWords)
+{
+	vector<string> filterWords;
+	for (const string& word : fiveWords)
+	{
+		if (ContainsWord(commonWords, word))
+		{
+			filterWords.push_back(word);
+		}
+	}
+	return filterWords;
 }
 
 const string GenerateTarget(vector <string> &fiveWords)
@@ -25,25 +51,13 @@ const string GenerateTarget(vector <string> &fiveWords)
 	return fiveWords[dist(engine)];
 }
 
-bool ContainsWord(vector <string> &fiveWords, string& guess)
-{
-	for (const string& word : fiveWords)
-	{
-		if (word == guess)
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
 int ScoreMatchWord(const string& target, string& guess)
 {
 	vector<int> matchedTarget(5, 0);
 	vector<int> matchedGuess(5, 0);
 
 	int score = 0;
-	for (int i = 0; i < target.size(); i++)
+	for (size_t i = 0; i < target.size(); i++)
 	{
 		if (target[i] == guess[i])
 		{
@@ -56,11 +70,11 @@ int ScoreMatchWord(const string& target, string& guess)
 	if (score == 10)
 		return score;
 
-	for (int i = 0; i < target.size(); i++)
+	for (size_t i = 0; i < target.size(); i++)
 	{
 		if (matchedTarget[i] == 1)
 			continue;
-		for (int j = 0; j < guess.size(); j++)
+		for (size_t j = 0; j < guess.size(); j++)
 		{
 			if (matchedGuess[j] == 1)
 				continue;
@@ -79,11 +93,18 @@ int ScoreMatchWord(const string& target, string& guess)
 int main()
 {
 	vector<string> fiveWords;
+	vector<string> commonWords;
 	ifstream fiveWordsFile("sgb-words.txt");
+	ifstream commonWordsFile("20k.txt");
 
-	LoadFile(fiveWords, fiveWordsFile);
-	const string target = GenerateTarget(fiveWords);
-	target.size();
+	LoadFiveWordFile(fiveWords, fiveWordsFile);
+	LoadFiveWordFile(commonWords, commonWordsFile);
+
+	commonWords.resize(2000); //set difficulty
+
+	vector<string> filterWords = FilterWords(fiveWords, commonWords);
+
+	const string target = GenerateTarget(filterWords);
 	while (true)
 	{
 		cout << "Guess a five letter word: ";
